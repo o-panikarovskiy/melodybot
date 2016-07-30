@@ -18,21 +18,24 @@ function onHelpStart(msg) {
 };
 
 function onNewChatParticipant(msg) {
-    //TO DO
+    //TO DO: remember chat and admin id
 };
 
 
 function sendHelpForPrivate(msg) {
     let menu = {
         '/play': 'Начать игру',
+        '/groups': 'Настроить меня для твоих групп',
         '/top': 'Общий рейтинг игроков'
     };
     return _bot.sendMessage(msg.chat.id, 'Привет, я умею понимать следующие команды:\n' + formatMenu(menu));
 };
 
 function sendHelpForGroup(msg) {
-    //TO DO
-    return _bot.sendMessage(msg.chat.id, 'Привет, я умею понимать следующие команды:\n GROUP');
+    let menu = {
+        '/top': 'Рейтинг игроков в чате'
+    };
+    return _bot.sendMessage(msg.chat.id, 'Привет, я умею понимать следующие команды:\n' + formatMenu(menu));
 };
 
 

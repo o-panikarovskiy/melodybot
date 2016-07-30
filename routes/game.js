@@ -1,4 +1,6 @@
 'use strict';
+let Song = require('../models/song.js');
+
 let _bot = null;
 
 module.exports = function (bot) {
@@ -7,6 +9,10 @@ module.exports = function (bot) {
 };
 
 function onPlay(msg) {
-    //TO DO
+    if (msg.chat.id != msg.from.id) return;//group mode
     _bot.sendMessage(msg.chat.id, 'GAME GO!');
+};
+
+function getRandomSong() {
+    //TO DO: find random song;
 };
