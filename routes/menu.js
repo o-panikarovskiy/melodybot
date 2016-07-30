@@ -23,11 +23,21 @@ function onNewChatParticipant(msg) {
 
 
 function sendHelpForPrivate(msg) {
-    //TO DO:
-    return _bot.sendMessage(msg.chat.id, 'Привет, я умею понимать следующие команды:\n PRIVATE');
+    let menu = {
+        '/play': 'Начать игру',
+        '/top': 'Общий рейтинг игроков'
+    };
+    return _bot.sendMessage(msg.chat.id, 'Привет, я умею понимать следующие команды:\n' + formatMenu(menu));
 };
 
 function sendHelpForGroup(msg) {
     //TO DO
     return _bot.sendMessage(msg.chat.id, 'Привет, я умею понимать следующие команды:\n GROUP');
+};
+
+
+function formatMenu(menu) {
+    return Object.keys(menu).map(key => {
+        return key + ' - ' + menu[key];
+    }).join('\n');
 };
