@@ -1,5 +1,6 @@
 'use strict';
-let Song = require('../models/song.js');
+const Song = require('../models/song.js');
+const Player = require('../models/player');
 
 let _bot = null;
 let _chatSongs = new Map();
@@ -11,11 +12,12 @@ module.exports = function (bot) {
 };
 
 function onPlay(msg) {
-    if (msg.chat.id != msg.from.id) return;//disable play in group mode
+    if (msg.chat.id != msg.from.id) return;//disable play command in group mode
     getRandomSong().then(song => {
         return sendSong(msg.chat.id, song).then(res => {
             song.chat = msg.chat;
             song.buttons_message_id = res.message_id;
+            song.playerAnswers = [];
 
             _chatSongs.set(msg.chat.id, song);
             return res;
@@ -27,15 +29,49 @@ function onAnswer(msg) {
     let song = _chatSongs.get(msg.message.chat.id);
     if (!song || song.buttons_message_id != msg.message.message_id) return;
 
-    song.isAnswerCorrect = (msg.data | 0) === song.rightAnswer;
+    let player = msg.from;
+    let isAnswerCorrect = (msg.data | 0) === song.rightAnswer;
+    let playerAnswer = {
+        isCorrect: isAnswerCorrect,
+        player: player,
+        score: 0
+    };
+
+    player.chatId = msg.message.chat.id;
+    song.playerAnswers.push(playerAnswer);
+
+    if (!isAnswerCorrect) return endGame(song);
+
+    //answer is correct
+    playerAnswer.score = calcScore(song);
+
+    Player.findOne({
+        id: player.id,
+        chatId: player.chatId
+    }).then(p => {
+        if (!p) {
+            p = new Player(player);
+        } else {
+            Object.assign(p, player);
+        };
+
+        p.score += playerAnswer.score;
+        return p.save();
+    });
+
     endGame(song);
 };
 
 function endGame(song) {
     _chatSongs.delete(song.chat.id);
     let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.rightAnswer]}\n`;
-    text += song.isAnswerCorrect ? `Вы угадали! Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
+    let answer = song.playerAnswers[0];
+    text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
     _bot.sendMessage(song.chat.id, text);
+};
+
+function calcScore(song) {
+    return 10;
 };
 
 function getRandomSong() {
