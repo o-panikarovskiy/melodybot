@@ -3,7 +3,7 @@
         "token": "254514685:AAH-VbOaCcXF2EkbGElqRvnv4E_g7gI8Z6k"
     },
     "game": {
-        "sessionTimeout": 5
+        "sessionTimeout": 30
     },
     "repository": {
         "connectionString": "mongodb://localhost/tgb"
