@@ -113,7 +113,11 @@ function endGame(song) {
         text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
     };
 
-    _bot.sendMessage(song.chatId, text);
+    _bot.editMessageText(text, {
+        message_id: song.buttonsMessageId,
+        chat_id: song.chatId,
+        reply_markup: ''
+    });
 };
 
 function calcScore(song) {
@@ -182,7 +186,10 @@ function onChatPlayIntervalChange(chatId, minutes) {
 
 function onBotAddToChat(msg) {
     if (msg.group_chat_created || (msg.new_chat_participant && msg.new_chat_participant.id == _bot.me.id)) {
-        getAndSaveChatAdmins(msg).then(initChatIntervals);
+        getAndSaveChatAdmins(msg).then(() => {
+            initChatIntervals();
+            startGame(msg.chat.id);
+        });
     };
 };
 
