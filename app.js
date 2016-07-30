@@ -17,7 +17,18 @@ mongoose.connect(REPOSITORY_CONNECTION_STRING).then(() => {
 
 function initBot() {
     let bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
-    require('./routes/menu')(bot);
-    require('./routes/admin')(bot);
-    require('./routes/game')(bot);
+    getMe(bot).then(me => {
+        require('./routes/menu')(bot);
+        require('./routes/admin')(bot);
+        require('./routes/game')(bot);
+    });
+};
+
+
+function getMe(bot) {
+    if (bot.me) return Promise.resolve(bot.me);
+    return bot.getMe().then(user => {
+        bot.me = user;
+        return user;
+    });
 };
