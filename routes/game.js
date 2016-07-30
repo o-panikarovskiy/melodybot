@@ -17,12 +17,13 @@ module.exports = function (bot) {
     bot.on('left_chat_participant', onBotRemovedFromChat);
     bot.on('new_chat_participant', onBotAddToChat);
     bot.on('group_chat_created', onBotAddToChat);
+    bot.on('intervalChange', onChatPlayIntervalChange);
     setInterval(clearOldChatSongs, 35 * 1000);//clear not answered songs;
-    // initGroupIntervals();
+    //initGroupIntervals();
 };
 
 function onPlay(msg) {
-    // if (msg.chat.id != msg.from.id) return;//disable play command in group mode
+    if (msg.chat.id != msg.from.id) return;//disable play command in group mode
     startGame(msg.chat.id);
 };
 
@@ -79,7 +80,7 @@ function onAnswer(msg) {
 };
 
 function startGame(chatId) {
-    if (_chatPlayIntervals.has(chatId)) return;
+    if (_chatSongs.has(chatId)) return;
     return getRandomSong().then(song => {
         return sendSong(chatId, song).then(res => {
             song.start = Date.now();
@@ -173,12 +174,15 @@ function clearOldChatSongs() {
 
 
 
+
+function onChatPlayIntervalChange(chatId, minutes) {
+    removeChatPlayInterval(chatId);
+    createChatPlayInterval(chatId, minutes * 60 * 1000);
+};
+
 function onBotAddToChat(msg) {
     if (msg.group_chat_created || (msg.new_chat_participant && msg.new_chat_participant.id == _bot.me.id)) {
-        getAndSaveChatAdmins(msg);
-        if (!_chatPlayIntervals.has(msg.chat.id)) {
-            createChatPlayInterval(msg.chat.id, 10 * 1000);
-        };
+        getAndSaveChatAdmins(msg).then(initGroupIntervals);
     };
 };
 
@@ -190,9 +194,11 @@ function onBotRemovedFromChat(msg) {
 };
 
 function initGroupIntervals() {
-    Chat.find().then(chats => {
-        chats.forEach((chat, i) => {
-            createChatPlayInterval(chat.chatId, 10 * 1000 + i * 1000);
+    Chat.find().then(groups => {
+        groups.forEach((group, i) => {
+            if (group.minutesInterval) {
+                createChatPlayInterval(group.chatId, group.minutesInterval * 60 * 1000 + i * 1000);
+            };
         });
     });
 };
@@ -221,12 +227,12 @@ function removeChatPlayInterval(chatId) {
 function getAndSaveChatAdmins(msg) {
     return _bot._request('getChatAdministrators', { form: { chat_id: msg.chat.id } }).then(res => {
         return Promise.all(res.map(row => {
-            let info = {
+            let info = new Chat({
                 adminId: row.user.id,
                 chatId: msg.chat.id,
                 chatTitle: msg.chat.title
-            };
-            return Chat.findOneAndUpdate({ adminId: info.adminId, chatId: info.chatId }, info, { upsert: true });
+            });
+            return Chat.update({ adminId: info.adminId, chatId: info.chatId }, info, { upsert: true });
         }));
     });
 };

@@ -21,6 +21,7 @@ function initBot() {
         require('./routes/menu')(bot);
         require('./routes/admin')(bot);
         require('./routes/game')(bot);
+        require('./routes/leaderboards')(bot);
     });
 };
 

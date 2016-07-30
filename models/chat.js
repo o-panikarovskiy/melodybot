@@ -10,8 +10,11 @@ let schema = new mongoose.Schema({
         type: Number,
         index: true
     },
+    minutesInterval: {
+        type: Number,
+        default: 15
+    },
     chatTitle: String,
-    timeout: Number
 });
 
 module.exports = mongoose.model('Chat', schema);
