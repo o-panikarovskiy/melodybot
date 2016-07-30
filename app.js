@@ -16,7 +16,8 @@ mongoose.connect(REPOSITORY_CONNECTION_STRING).then(() => {
 
 
 function initBot() {
-    let bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });  
+    let bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
     require('./routes/menu')(bot);
+    require('./routes/admin')(bot);
     require('./routes/game')(bot);
 };
