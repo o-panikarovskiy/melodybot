@@ -7,12 +7,26 @@ let schema = new mongoose.Schema({
         type: String,
         index: true
     },
-    name: String,
-    genre: String,
+    genre: {
+        type: String,
+        index: true
+    },
+    values_all: [{ type: Number }],
+    performer: String,
+    lyrics: String,
+    performers: [{ type: String }],
     poster: String,
-    posterPath: String,
+    file_mp3: String,
+    performer_id: String,
+    type: Number,
+    track_name: String,
+    timestudy: Number,
     answers: [{ type: String }],
-    rightAnswer: Number
+    right_answer: Number,
+    muzis_id: String,
+    random: Number,
+    genre_id: String,
+    posterPath: String,
 });
 
 module.exports = mongoose.model('Song', schema);

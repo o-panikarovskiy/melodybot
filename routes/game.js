@@ -24,7 +24,7 @@ function onAnswer(msg) {
     if (!song || song.buttonsMessageId != msg.message.message_id) return;
 
     let player = msg.from;
-    let isAnswerCorrect = (msg.data | 0) === song.rightAnswer;
+    let isAnswerCorrect = (msg.data | 0) === song.right_answer;
     let playerAnswer = {
         isCorrect: isAnswerCorrect,
         player: player,
@@ -74,7 +74,7 @@ function endGame(song) {
     _chatSongs.delete(song.chat.id);
     clearTimeout(song.timerId);
 
-    let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.rightAnswer]}\n`;
+    let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.right_answer]}\n`;
     let answer = song.playerAnswers[0];
     text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
     _bot.sendMessage(song.chat.id, text);
@@ -88,15 +88,11 @@ function calcScore(song) {
 function getRandomSong() {
     let rand = Math.random();
     return Song.find({
-        random: { $gte: rand },
-        answers: { $exists: true, $ne: [] },
-        rightAnswer: { $exists: true }
+        random: { $gte: rand }
     }).sort({ random: 1 }).limit(1).exec().then(res => {
         if (res[0]) return res[0];
         return Song.find({
-            random: { $lte: rand },
-            answers: { $exists: true, $ne: [] },
-            rightAnswer: { $exists: true }
+            random: { $lte: rand }
         }).sort({ random: -1 }).limit(1).exec().then(res => {
             if (res[0]) return res[0];
             return Promise.reject('Song not found!');
