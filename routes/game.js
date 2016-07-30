@@ -17,11 +17,12 @@ module.exports = function (bot) {
     bot.on('left_chat_participant', onBotRemovedFromChat);
     bot.on('new_chat_participant', onBotAddToChat);
     bot.on('group_chat_created', onBotAddToChat);
-    initGroupIntervals();
+    setInterval(clearOldChatSongs, 35 * 1000);//clear not answered songs;
+    // initGroupIntervals();
 };
 
 function onPlay(msg) {
-    if (msg.chat.id != msg.from.id) return;//disable play command in group mode
+    // if (msg.chat.id != msg.from.id) return;//disable play command in group mode
     startGame(msg.chat.id);
 };
 
@@ -45,7 +46,13 @@ function onAnswer(msg) {
     player.chatId = msg.message.chat.id;
     song.playerAnswers.push(playerAnswer);
 
-    if (!isAnswerCorrect) return endGame(song);
+    if (!isAnswerCorrect) {
+        if (song.isGroupPlay) {
+            return _bot.answerCallbackQuery(msg.id, `Не угадали! ${song.answers[song.right_answer]}`);
+        } else {
+            return endGame(song);
+        };
+    };
 
     //answer is correct
     playerAnswer.score = calcScore(song);
@@ -64,11 +71,15 @@ function onAnswer(msg) {
         return p.save();
     });
 
-    endGame(song);
+    if (song.isGroupPlay) {
+        return _bot.answerCallbackQuery(msg.id, `ДА! +${playerAnswer.score}! Ждем остальных...`);
+    } else {
+        return endGame(song);
+    };
 };
 
 function startGame(chatId) {
-    console.log(_chatPlayIntervals);
+    if (_chatPlayIntervals.has(chatId)) return;
     return getRandomSong().then(song => {
         return sendSong(chatId, song).then(res => {
             song.start = Date.now();
@@ -88,8 +99,19 @@ function endGame(song) {
     clearTimeout(song.timerId);
 
     let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.right_answer]}\n`;
-    let answer = song.playerAnswers[0];
-    text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
+    if (song.isGroupPlay) {
+        let winers = song.playerAnswers
+            .filter(a => a.isCorrect)
+            .slice(0, 10)
+            .sort((a, b) => b.score - a.score)
+            .map((a, i) => (i + 1) + '. ' + a.player.first_name + (a.player.last_name ? ' ' + a.player.last_name : '') + ': +' + a.score);
+
+        text += (winers.length ? 'Победители:\n' + winers.join('\n') : 'Победителей нет.');
+    } else {
+        let answer = song.playerAnswers[0];
+        text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
+    };
+
     _bot.sendMessage(song.chatId, text);
 };
 
