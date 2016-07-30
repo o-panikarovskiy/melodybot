@@ -1,5 +1,6 @@
 'use strict';
-const Song = require('../models/song.js');
+const Chat = require('../models/chat');
+const Song = require('../models/song');
 const Player = require('../models/player');
 const config = require('../config');
 
@@ -7,11 +8,16 @@ const SESSION_TIMEOUT = (config.get('game:sessionTimeout') | 0) * 1000;
 
 let _bot = null;
 let _chatSongs = new Map();
+let _chatPlayIntervals = new Map();
 
 module.exports = function (bot) {
     _bot = bot;
     bot.onText(/^\/play$/, onPlay);
     bot.on('callback_query', onAnswer);
+    bot.on('left_chat_participant', onBotRemovedFromChat);
+    bot.on('new_chat_participant', onBotAddToChat);
+    bot.on('group_chat_created', onBotAddToChat);
+    initGroupIntervals();
 };
 
 function onPlay(msg) {
@@ -25,6 +31,8 @@ function onAnswer(msg) {
     if (song.playerAnswers.find(a => a.player.id == msg.from.id)) {
         return _bot.answerCallbackQuery(msg.id, 'Нельзя отвечать дважды :)');
     };
+
+    song.isGroupPlay = (msg.from.id != song.chatId);
 
     let player = msg.from;
     let isAnswerCorrect = (msg.data | 0) === song.right_answer;
@@ -60,6 +68,7 @@ function onAnswer(msg) {
 };
 
 function startGame(chatId) {
+    console.log(_chatPlayIntervals);
     return getRandomSong().then(song => {
         return sendSong(chatId, song).then(res => {
             song.start = Date.now();
@@ -127,5 +136,75 @@ function formatAnswersInlineKeyboard(song) {
                 callback_data: i + ''
             }
         ]
+    });
+};
+
+function clearOldChatSongs() {
+    for (let song of _chatSongs.values()) {
+        if ((Date.now() - song.start) > SESSION_TIMEOUT + 100) {
+            endGame(song);
+        };
+    };
+};
+
+
+
+
+
+function onBotAddToChat(msg) {
+    if (msg.group_chat_created || (msg.new_chat_participant && msg.new_chat_participant.id == _bot.me.id)) {
+        getAndSaveChatAdmins(msg);
+        if (!_chatPlayIntervals.has(msg.chat.id)) {
+            createChatPlayInterval(msg.chat.id, 10 * 1000);
+        };
+    };
+};
+
+function onBotRemovedFromChat(msg) {
+    if (msg.left_chat_participant && msg.left_chat_participant.id == _bot.me.id) {
+        removeChatPlayInterval(msg.chat.id);
+        Chat.remove({ chatId: msg.chat.id }).exec();
+    };
+};
+
+function initGroupIntervals() {
+    Chat.find().then(chats => {
+        chats.forEach((chat, i) => {
+            createChatPlayInterval(chat.chatId, 10 * 1000 + i * 1000);
+        });
+    });
+};
+
+function createChatPlayInterval(chatId, ms) {
+    let intervalId = setInterval(() => {
+        startGame(chatId);
+    }, ms);
+    _chatPlayIntervals.set(chatId, intervalId);
+};
+
+function removeChatPlayInterval(chatId) {
+    if (!_chatPlayIntervals.has(chatId)) return;
+
+    let intervalId = _chatPlayIntervals.get(chatId);
+    _chatPlayIntervals.delete(chatId);
+    clearInterval(intervalId);
+
+    if (!_chatSongs.has(chatId)) return;
+
+    let song = _chatSongs.has(chatId);
+    _chatSongs.delete(chatId);
+    clearTimeout(song.timerId);
+};
+
+function getAndSaveChatAdmins(msg) {
+    return _bot._request('getChatAdministrators', { form: { chat_id: msg.chat.id } }).then(res => {
+        return Promise.all(res.map(row => {
+            let info = {
+                adminId: row.user.id,
+                chatId: msg.chat.id,
+                chatTitle: msg.chat.title
+            };
+            return Chat.findOneAndUpdate({ adminId: info.adminId, chatId: info.chatId }, info, { upsert: true });
+        }));
     });
 };

@@ -3,14 +3,15 @@ const mongoose = require('mongoose');
 
 let schema = new mongoose.Schema({
     adminId: {
-        type: String,
+        type: Number,
         index: true
     },
     chatId: {
-        type: String,
+        type: Number,
         index: true
     },
-    chatTitle: String
+    chatTitle: String,
+    timeout: Number
 });
 
 module.exports = mongoose.model('Chat', schema);

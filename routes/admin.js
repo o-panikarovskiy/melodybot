@@ -9,7 +9,6 @@ module.exports = function (bot) {
     bot.onText(/^\/groups$/, onGroups);
     bot.on('new_chat_participant', onAddToChat);
     bot.on('group_chat_created', onAddToChat);
-    bot.on('left_chat_participant', onRemoveFromChat);
     bot.on('callback_query', onGroupAnswer);
 };
 
@@ -33,36 +32,8 @@ function onGroupAnswer(msg) {
 
 function onAddToChat(msg) {
     if (msg.group_chat_created || (msg.new_chat_participant && msg.new_chat_participant.id == _bot.me.id)) {
-        getAndSaveChatAdmins(msg);
+        Utils.sendHelpForGroup(_bot, msg);
     };
-    Utils.sendHelpForGroup(_bot, msg);
-};
-
-function onRemoveFromChat(msg) {
-    if (msg.left_chat_participant && msg.left_chat_participant.id == _bot.me.id) {
-        removeChatAdmins(msg);
-    };
-};
-
-function getAndSaveChatAdmins(msg) {
-    return _bot._request('getChatAdministrators', { form: { chat_id: msg.chat.id } }).then(res => {
-        return Promise.all(res.map(row => {
-            return saveChatInfo({
-                adminId: row.user.id,
-                chatId: msg.chat.id,
-                chatTitle: msg.chat.title
-            });
-        }));
-    });
-};
-
-function removeChatAdmins(msg) {
-    return Chat.remove({ chatId: msg.chat.id }).exec();
-};
-
-
-function saveChatInfo(info) {
-    return Chat.findOneAndUpdate({ adminId: info.adminId, chatId: info.chatId }, info, { upsert: true });
 };
 
 function formatGroupsListReplyButtons(groups) {
