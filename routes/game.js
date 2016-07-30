@@ -81,8 +81,8 @@ function endGame(song) {
 };
 
 function calcScore(song) {
-    let rest = TIMEOUT - (Date.now() - song.start);
-    let persent = rest / TIMEOUT;
+    let rest = SESSION_TIMEOUT - (Date.now() - song.start);
+    let persent = rest / SESSION_TIMEOUT;
     return Math.ceil(10 * persent);
 };
 
