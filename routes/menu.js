@@ -20,7 +20,7 @@ function onGroups(msg) {
         if (!list || !list.length) return _bot.sendMessage(msg.chat.id, 'Сначала надо добавить меня в группу, где вы являетесь администратором.');
         _bot.sendMessage(msg.chat.id, 'Выберите группу для настройки', {
             reply_markup: {
-                inline_keyboard: formatGroupsReplyButtons(list)
+                inline_keyboard: formatGroupsListReplyButtons(list)
             }
         });
     });
@@ -29,7 +29,6 @@ function onGroups(msg) {
 function onGroupAnswer(msg) {
     //TO DO: show group config
 };
-
 
 function onHelpStart(msg) {
     if (msg.from.id === msg.chat.id) {
@@ -42,7 +41,6 @@ function onNewChatParticipant(msg) {
     getAndSaveChatAdmins(msg);
     sendHelpForGroup(msg);
 };
-
 
 function sendHelpForPrivate(msg) {
     let menu = {
@@ -60,7 +58,6 @@ function sendHelpForGroup(msg) {
 
     return _bot.sendMessage(msg.chat.id, 'Привет, я умею понимать следующие команды:\n' + formatMenu(menu));
 };
-
 
 function formatMenu(menu) {
     return Object.keys(menu).map(key => {
@@ -80,12 +77,11 @@ function getAndSaveChatAdmins(msg) {
     });
 };
 
-
 function saveChatInfo(info) {
     return Chat.findOneAndUpdate({ adminId: info.adminId, chatId: info.chatId }, info, { upsert: true });
 };
 
-function formatGroupsReplyButtons(groups) {
+function formatGroupsListReplyButtons(groups) {
     return groups.map((g, i) => {
         return [
             {

@@ -2,6 +2,7 @@
 let Song = require('../models/song.js');
 
 let _bot = null;
+let _chatSongs = new Map();
 
 module.exports = function (bot) {
     _bot = bot;
@@ -9,10 +10,53 @@ module.exports = function (bot) {
 };
 
 function onPlay(msg) {
-    if (msg.chat.id != msg.from.id) return;//group mode
-    _bot.sendMessage(msg.chat.id, 'GAME GO!');
+    if (msg.chat.id != msg.from.id) return;//disable play in group mode
+    getRandomSong().then(song => {
+        return sendSong(msg.chat.id, song);
+    });
 };
 
 function getRandomSong() {
-    //TO DO: find random song;
+    let rand = Math.random();
+    return Song.find({
+        random: { $gte: rand },
+        answers: { $exists: true, $ne: [] },
+        rightAnswer: { $exists: true }
+    }).sort({ random: 1 }).limit(1).exec().then(res => {
+        if (res[0]) return res[0];
+        return Song.find({
+            random: { $lte: rand },
+            answers: { $exists: true, $ne: [] },
+            rightAnswer: { $exists: true }
+        }).sort({ random: -1 }).limit(1).exec().then(res => {
+            if (res[0]) return res[0];
+            return Promise.reject('Song not found!');
+        });
+    }).catch(err => {
+        console.error(err);
+    });
+};
+
+
+function sendSong(chatId, song) {
+    return _bot.sendVoice(chatId, song.id).then(res => {
+        let text = `Выберите правильный ответ.`;
+        return _bot.sendMessage(chatId, text, {
+            disable_notification: true,
+            reply_markup: {
+                inline_keyboard: formatAnswersInlineKeyboard(song)
+            }
+        });
+    });
+};
+
+function formatAnswersInlineKeyboard(song) {
+    return song.answers.map((a, i) => {
+        return [
+            {
+                text: a.trim(),
+                callback_data: i + ''
+            }
+        ]
+    });
 };
