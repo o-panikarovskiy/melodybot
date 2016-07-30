@@ -16,7 +16,7 @@ module.exports = function (bot) {
 
 function onPlay(msg) {
     if (msg.chat.id != msg.from.id) return;//disable play command in group mode
-    startGame(msg);
+    startGame(msg.chat.id);
 };
 
 function onAnswer(msg) {
@@ -71,13 +71,13 @@ function startGame(chatId) {
 };
 
 function endGame(song) {
-    _chatSongs.delete(song.chat.id);
+    _chatSongs.delete(song.chatId);
     clearTimeout(song.timerId);
 
     let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.right_answer]}\n`;
     let answer = song.playerAnswers[0];
     text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
-    _bot.sendMessage(song.chat.id, text);
+    _bot.sendMessage(song.chatId, text);
 };
 
 function calcScore(song) {
