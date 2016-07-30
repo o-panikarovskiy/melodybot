@@ -74,7 +74,7 @@ function endGame(song) {
     _chatSongs.delete(song.chatId);
     clearTimeout(song.timerId);
 
-    let text = `Игра окончена!\nПравильный ответ: ${formatSongTitle(song.performer, song.answers[song.right_answer])}\n`;
+    let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.right_answer]}\n`;
     let answer = song.playerAnswers[0];
     text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
     _bot.sendMessage(song.chatId, text);
@@ -119,13 +119,9 @@ function formatAnswersInlineKeyboard(song) {
     return song.answers.map((a, i) => {
         return [
             {
-                text: formatSongTitle(song.performer, a.trim()),
+                text: a.trim(),
                 callback_data: i + ''
             }
         ]
     });
-};
-
-function formatSongTitle(performer, title) {
-    return `${performer} - ${title}`;
 };
