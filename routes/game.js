@@ -22,6 +22,9 @@ function onPlay(msg) {
 function onAnswer(msg) {
     let song = _chatSongs.get(msg.message.chat.id);
     if (!song || song.buttonsMessageId != msg.message.message_id) return;
+    if (song.playerAnswers.find(a => a.player.id == msg.from.id)) {
+        return _bot.answerCallbackQuery(msg.id, 'Нельзя отвечать дважды :)');
+    };
 
     let player = msg.from;
     let isAnswerCorrect = (msg.data | 0) === song.right_answer;
@@ -59,6 +62,7 @@ function onAnswer(msg) {
 function startGame(chatId) {
     return getRandomSong().then(song => {
         return sendSong(chatId, song).then(res => {
+            song.start = Date.now();
             song.chatId = chatId;
             song.buttonsMessageId = res.message_id;
             song.playerAnswers = [];
