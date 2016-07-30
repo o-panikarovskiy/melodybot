@@ -19,7 +19,7 @@ module.exports = function (bot) {
     bot.on('group_chat_created', onBotAddToChat);
     bot.on('intervalChange', onChatPlayIntervalChange);
     setInterval(clearOldChatSongs, 35 * 1000);//clear not answered songs;
-    //initGroupIntervals();
+    initChatIntervals();
 };
 
 function onPlay(msg) {
@@ -80,7 +80,7 @@ function onAnswer(msg) {
 };
 
 function startGame(chatId) {
-    if (_chatSongs.has(chatId)) return;
+    if (_chatSongs.has(chatId)) return; //disable start when has active songs 
     return getRandomSong().then(song => {
         return sendSong(chatId, song).then(res => {
             song.start = Date.now();
@@ -182,7 +182,7 @@ function onChatPlayIntervalChange(chatId, minutes) {
 
 function onBotAddToChat(msg) {
     if (msg.group_chat_created || (msg.new_chat_participant && msg.new_chat_participant.id == _bot.me.id)) {
-        getAndSaveChatAdmins(msg).then(initGroupIntervals);
+        getAndSaveChatAdmins(msg).then(initChatIntervals);
     };
 };
 
@@ -193,7 +193,7 @@ function onBotRemovedFromChat(msg) {
     };
 };
 
-function initGroupIntervals() {
+function initChatIntervals() {
     Chat.find().then(groups => {
         groups.forEach((group, i) => {
             if (group.minutesInterval) {
