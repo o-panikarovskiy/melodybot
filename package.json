@@ -1,0 +1,26 @@
+{
+  "name": "melodybot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/o-panikarovskiy/melodybot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/o-panikarovskiy/melodybot/issues"
+  },
+  "homepage": "https://github.com/o-panikarovskiy/melodybot#readme",
+  "dependencies": {
+    "install": "^0.8.1",
+    "mongoose": "^4.5.7",
+    "nconf": "^0.8.4",
+    "node-telegram-bot-api": "^0.23.3",
+    "npm": "^3.10.5"
+  }
+}
