@@ -1,6 +1,9 @@
 'use strict';
 const Song = require('../models/song.js');
 const Player = require('../models/player');
+const config = require('../config');
+
+const SESSION_TIMEOUT = (config.get('game:sessionTimeout') | 0) * 1000;
 
 let _bot = null;
 let _chatSongs = new Map();
@@ -13,21 +16,12 @@ module.exports = function (bot) {
 
 function onPlay(msg) {
     if (msg.chat.id != msg.from.id) return;//disable play command in group mode
-    getRandomSong().then(song => {
-        return sendSong(msg.chat.id, song).then(res => {
-            song.chat = msg.chat;
-            song.buttons_message_id = res.message_id;
-            song.playerAnswers = [];
-
-            _chatSongs.set(msg.chat.id, song);
-            return res;
-        });
-    });
+    startGame(msg);
 };
 
 function onAnswer(msg) {
     let song = _chatSongs.get(msg.message.chat.id);
-    if (!song || song.buttons_message_id != msg.message.message_id) return;
+    if (!song || song.buttonsMessageId != msg.message.message_id) return;
 
     let player = msg.from;
     let isAnswerCorrect = (msg.data | 0) === song.rightAnswer;
@@ -62,8 +56,24 @@ function onAnswer(msg) {
     endGame(song);
 };
 
+function startGame(chatId) {
+    return getRandomSong().then(song => {
+        return sendSong(chatId, song).then(res => {
+            song.chatId = chatId;
+            song.buttonsMessageId = res.message_id;
+            song.playerAnswers = [];
+            song.timerId = setTimeout(() => endGame(song), SESSION_TIMEOUT);
+
+            _chatSongs.set(chatId, song);
+            return res;
+        });
+    });
+};
+
 function endGame(song) {
     _chatSongs.delete(song.chat.id);
+    clearTimeout(song.timerId);
+
     let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.rightAnswer]}\n`;
     let answer = song.playerAnswers[0];
     text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
@@ -71,6 +81,7 @@ function endGame(song) {
 };
 
 function calcScore(song) {
+    //TO DO: return percent
     return 10;
 };
 
@@ -97,7 +108,7 @@ function getRandomSong() {
 
 function sendSong(chatId, song) {
     return _bot.sendVoice(chatId, song.id).then(res => {
-        let text = `Выберите правильный ответ.`;
+        let text = `Выберите правильный ответ. У вас есть ${SESSION_TIMEOUT / 1000} секунд.`;
         return _bot.sendMessage(chatId, text, {
             disable_notification: true,
             reply_markup: {

@@ -1,8 +1,11 @@
 {
-    "app":{
+    "app": {
         "token": "254514685:AAH-VbOaCcXF2EkbGElqRvnv4E_g7gI8Z6k"
     },
-    "repository":{
-        "connectionString":"mongodb://localhost/tgb"
+    "game": {
+        "sessionTimeout": 5
+    },
+    "repository": {
+        "connectionString": "mongodb://localhost/tgb"
     }
 }
