@@ -77,6 +77,12 @@ function onAnswer(msg) {
         };
 
         p.score += playerAnswer.score;
+
+        if (p.score >= 15 && !p.hasBronzeBage) {
+            p.hasBronzeBage = true;
+            sendBronzeBage(player.chatId);
+        };
+
         return p.save();
     });
 
@@ -122,7 +128,10 @@ function endGame(song) {
     }).then(res => {
         return sendSongPoster(song.chatId, song);
     }).then(res => {
-        if (!song.isGroupPlay && song.playerAnswers[0]) return startGame(song.chatId, false);
+        let hasAnswer = !!song.playerAnswers[0];
+        if (hasAnswer) {
+            if (!song.isGroupPlay) return startGame(song.chatId, false);
+        };
     });
 
 };
@@ -207,6 +216,22 @@ function clearOldChatSongs() {
             endGame(song);
         };
     };
+};
+
+function sendBronzeBage(chatId) {
+    return _bot.sendPhoto(chatId, 'AgADAgADI6kxG_2VKw_eiNl-Rjggte8RcQ0ABGjhqPxQ7F0zMKEAAgI', {
+        caption: 'Поздрвляю!\nТы получил награду. Бронзовый Меломан.\nРасскажи друзьям обо мне!',
+        reply_markup: JSON.stringify({
+            inline_keyboard: [
+                [
+                    {
+                        text: 'Рассказать друзьям',
+                        switch_inline_query: `Я получил награду Бронзовый меломан. Попробуй и ты!`
+                    }
+                ]
+            ]
+        })
+    });
 };
 
 
