@@ -20,7 +20,7 @@ module.exports = function (bot) {
     bot.on('group_chat_created', onBotAddToChat);
     bot.on('new_chat_title', onChatUpdate);
     bot.on('intervalChange', onChatPlayIntervalChange);
-    setInterval(clearOldChatSongs, 35 * 1000);//clear not answered songs;
+    setInterval(clearOldChatSongs, SESSION_TIMEOUT + 500);//clear not answered songs;
     initChatIntervals();
 };
 
@@ -32,7 +32,7 @@ function onDemo(msg) {
 
 function onPlay(msg) {
     if (msg.chat.id != msg.from.id) return;//disable play command in group mode
-    startGame(msg.chat.id);
+    startGame(msg.chat.id, false);
 };
 
 function onAnswer(msg) {
@@ -41,8 +41,6 @@ function onAnswer(msg) {
     if (song.playerAnswers.find(a => a.player.id == msg.from.id)) {
         return _bot.answerCallbackQuery(msg.id, 'Нельзя отвечать дважды :)');
     };
-
-    song.isGroupPlay = (msg.from.id != song.chatId);
 
     let player = msg.from;
     let isAnswerCorrect = (msg.data | 0) === song.right_answer;
@@ -87,9 +85,10 @@ function onAnswer(msg) {
     };
 };
 
-function startGame(chatId) {
+function startGame(chatId, isGroupPlay) {
     if (_chatSongs.has(chatId)) return; //disable start when has active songs 
     return getRandomSong().then(song => {
+        song.isGroupPlay = !!isGroupPlay;
         return sendSong(chatId, song);
     });
 };
@@ -204,7 +203,7 @@ function onBotAddToChat(msg) {
     if (msg.group_chat_created || (msg.new_chat_participant && msg.new_chat_participant.id == _bot.me.id)) {
         getAndSaveChatAdmins(msg).then(() => {
             initChatIntervals();
-            startGame(msg.chat.id);
+            startGame(msg.chat.id, true);
         });
     };
 };
@@ -232,7 +231,7 @@ function initChatIntervals() {
 
 function createChatPlayInterval(chatId, ms) {
     let intervalId = setInterval(() => {
-        startGame(chatId);
+        startGame(chatId, true);
     }, ms);
     _chatPlayIntervals.set(chatId, intervalId);
 };
