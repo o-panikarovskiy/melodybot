@@ -122,7 +122,7 @@ function endGame(song) {
     }).then(res => {
         return sendSongPoster(song.chatId, song);
     }).then(res => {
-        if (!song.isGroupPlay) return startGame(song.chatId, false);
+        if (!song.isGroupPlay && song.playerAnswers[0]) return startGame(song.chatId, false);
     });
 
 };
