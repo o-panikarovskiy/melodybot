@@ -26,6 +26,7 @@ module.exports = function (bot) {
 
 function onDemo(msg) {
     return Song.findOne({ id: 'AwADAgADRwQAAv2VKw_b1cdmMxS9tAI' }).then(song => {
+        song.isGroupPlay = msg.chat.id != msg.from.id;
         return sendSong(msg.chat.id, song);
     });
 };
@@ -96,6 +97,7 @@ function startGame(chatId, isGroupPlay) {
 function endGame(song) {
     _chatSongs.delete(song.chatId);
     clearTimeout(song.timerId);
+    //clearInterval(song.intervalId);
 
     let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.right_answer]}\n`;
     if (song.isGroupPlay) {
@@ -146,7 +148,7 @@ function getRandomSong() {
 
 function sendSong(chatId, song) {
     return _bot.sendVoice(chatId, song.id).then(res => {
-        let text = `Выберите правильный ответ. У вас есть ${SESSION_TIMEOUT / 1000} секунд.`;
+        let text = `Выберите правильный ответ. У вас есть ${SESSION_TIMEOUT / 1000} сек.`;
         return _bot.sendMessage(chatId, text, {
             disable_notification: true,
             reply_markup: {
@@ -159,6 +161,7 @@ function sendSong(chatId, song) {
         song.buttonsMessageId = res.message_id;
         song.playerAnswers = [];
         song.timerId = setTimeout(() => endGame(song), SESSION_TIMEOUT);
+        //song.intervalId = setInterval(() => changeSongTimerText(song), 1000);
 
         _chatSongs.set(chatId, song);
         return res;
@@ -178,6 +181,18 @@ function formatAnswersInlineKeyboard(song) {
                 callback_data: i + ''
             }
         ]
+    });
+};
+
+function changeSongTimerText(song) {
+    let rest = Math.ceil((SESSION_TIMEOUT - (Date.now() - song.start)) / 1000);
+    let text = `Выберите правильный ответ. У вас есть ${rest} сек.`;
+    _bot.editMessageText(text, {
+        message_id: song.buttonsMessageId,
+        chat_id: song.chatId,
+        reply_markup: {
+            inline_keyboard: formatAnswersInlineKeyboard(song)
+        }
     });
 };
 
