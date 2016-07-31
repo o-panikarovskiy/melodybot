@@ -5,8 +5,8 @@ let _bot = null;
 
 module.exports = function (bot) {
     _bot = bot;
-    bot.onText(/^\/start$/, onHelpStart);
-    bot.onText(/^\/help$/, onHelpStart);
+    bot.onText(/^\/start/, onHelpStart);
+    bot.onText(/^\/help/, onHelpStart);
 
 };
 

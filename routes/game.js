@@ -7,14 +7,15 @@ const config = require('../config');
 
 const SESSION_TIMEOUT = (config.get('game:sessionTimeout') | 0) * 1000;
 
+let demoStep = 0;
 let _bot = null;
 let _chatSongs = new Map();
 let _chatPlayIntervals = new Map();
 
 module.exports = function (bot) {
     _bot = bot;
-    bot.onText(/^\/play$/, onPlay);
-    bot.onText(/^\/demo$/, onDemo);
+    bot.onText(/^\/play/, onPlay);
+    bot.onText(/^\/demo/, onDemo);
     bot.on('callback_query', onAnswer);
     bot.on('left_chat_participant', onBotRemovedFromChat);
     bot.on('new_chat_participant', onBotAddToChat);
@@ -97,7 +98,11 @@ function onAnswer(msg) {
 
 function startGame(chatId, isGroupPlay) {
     if (_chatSongs.has(chatId)) return; //disable start when has active songs 
-    return getRandomSong().then(song => {
+
+    if (isGroupPlay) {
+        demoStep = 10;
+    }
+    return getRandomSongDemo().then(song => {
         song.isGroupPlay = !!isGroupPlay;
         return sendSong(chatId, song);
     });
@@ -163,6 +168,31 @@ function getRandomSong() {
         });
     }).catch(err => {
         console.error(err);
+    });
+};
+
+function getRandomSongDemo() {
+    let id = '';
+    switch (demoStep) {
+        case 0:
+            id = "AwADAgADRwQAAv2VKw_b1cdmMxS9tAI"
+            break;
+        case 1:
+            id = 'AwADAgADBwMAAv2VKw9eXZ0SWJJOkQI';
+            break;
+        case 2:
+            id = 'AwADAgAD2gIAAv2VKw9i6sQE8CWBPAI';
+            break;
+        case 10:
+            id = 'AwADAgAD2wIAAv2VKw-1eHgYKA7rugI';
+            break;
+        default:
+            id = 'AwADAgADVAMAAv2VKw87LhOjvae4ygI';
+            break;
+    };
+    demoStep = demoStep > 2 ? 0 : demoStep + 1;
+    return Song.findOne({
+        id: id
     });
 };
 

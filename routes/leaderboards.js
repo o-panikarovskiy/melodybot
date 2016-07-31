@@ -5,7 +5,7 @@ let _bot = null;
 
 module.exports = function (bot) {
     _bot = bot;
-    bot.onText(/^\/top$/, showLeaders);
+    bot.onText(/^\/top/, showLeaders);
 };
 
 function showLeaders(msg) {
