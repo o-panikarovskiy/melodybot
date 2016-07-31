@@ -120,7 +120,9 @@ function endGame(song) {
         chat_id: song.chatId,
         reply_markup: ''
     }).then(res => {
-        sendSongPoster(song.chatId, song);
+        return sendSongPoster(song.chatId, song);
+    }).then(res => {
+        if (!song.isGroupPlay) return startGame(song.chatId, false);
     });
 
 };
