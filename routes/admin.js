@@ -58,7 +58,7 @@ function onTimerChange(msg, groupId, prevVal) {
     let nextVal = '';
     switch (prevVal) {
         case '2':
-            nextVal = '2';
+            nextVal = '5';
             break;
         case '5':
             nextVal = '10';
