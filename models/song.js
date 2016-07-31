@@ -16,6 +16,7 @@ let schema = new mongoose.Schema({
     lyrics: String,
     performers: [{ type: String }],
     poster: String,
+    poster_id: String,
     file_mp3: String,
     performer_id: String,
     type: Number,
@@ -25,8 +26,7 @@ let schema = new mongoose.Schema({
     right_answer: Number,
     muzis_id: String,
     random: Number,
-    genre_id: String,
-    posterPath: String,
+    genre_id: String
 });
 
 module.exports = mongoose.model('Song', schema);

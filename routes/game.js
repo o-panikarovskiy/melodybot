@@ -117,7 +117,10 @@ function endGame(song) {
         message_id: song.buttonsMessageId,
         chat_id: song.chatId,
         reply_markup: ''
+    }).then(res => {
+        sendSongPoster(song.chatId, song);
     });
+
 };
 
 function calcScore(song) {
@@ -153,6 +156,11 @@ function sendSong(chatId, song) {
             }
         });
     });
+};
+
+function sendSongPoster(chatId, song) {
+    if (!song.poster_id) return Promise.reject();
+    return _bot.sendPhoto(chatId, song.poster_id);
 };
 
 function formatAnswersInlineKeyboard(song) {
