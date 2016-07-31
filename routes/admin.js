@@ -6,7 +6,7 @@ let _bot = null;
 
 module.exports = function (bot) {
     _bot = bot;
-    bot.onText(/^\/groups$/, onGroups);
+    bot.onText(/^\/groups/, onGroups);
     bot.on('new_chat_participant', onAddToChat);
     bot.on('group_chat_created', onAddToChat);
     bot.on('callback_query', onGroupAnswer);

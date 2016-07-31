@@ -13,8 +13,7 @@ let _chatPlayIntervals = new Map();
 
 module.exports = function (bot) {
     _bot = bot;
-    bot.onText(/^\/play$/, onPlay);
-    bot.onText(/^\/demo$/, onDemo);
+    bot.onText(/^\/play/, onPlay);
     bot.on('callback_query', onAnswer);
     bot.on('left_chat_participant', onBotRemovedFromChat);
     bot.on('new_chat_participant', onBotAddToChat);
@@ -23,13 +22,6 @@ module.exports = function (bot) {
     bot.on('intervalChange', onChatPlayIntervalChange);
     setInterval(clearOldChatSongs, SESSION_TIMEOUT + 500);//clear not answered songs;
     initChatIntervals();
-};
-
-function onDemo(msg) {
-    return Song.findOne({ id: 'AwADAgADRwQAAv2VKw_b1cdmMxS9tAI' }).then(song => {
-        song.isGroupPlay = msg.chat.id != msg.from.id;
-        return sendSong(msg.chat.id, song);
-    });
 };
 
 function onPlay(msg) {
