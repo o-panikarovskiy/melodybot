@@ -18,13 +18,14 @@ module.exports = function (bot) {
     bot.on('left_chat_participant', onBotRemovedFromChat);
     bot.on('new_chat_participant', onBotAddToChat);
     bot.on('group_chat_created', onBotAddToChat);
+    bot.on('new_chat_title', onChatUpdate);
     bot.on('intervalChange', onChatPlayIntervalChange);
     setInterval(clearOldChatSongs, 35 * 1000);//clear not answered songs;
     initChatIntervals();
 };
 
 function onDemo(msg) {
-    return Song.findOne({ id: 'AwADAgAD1QIAAv2VKw8-9x1bYveb7QI' }).then(song => {
+    return Song.findOne({ id: 'AwADAgADRwQAAv2VKw_b1cdmMxS9tAI' }).then(song => {
         return sendSong(msg.chat.id, song);
     });
 };
@@ -208,6 +209,10 @@ function onBotAddToChat(msg) {
     };
 };
 
+function onChatUpdate(msg) {
+    Chat.update({ chatId: msg.chat.id }, { $set: { chatTitle: msg.new_chat_title } }).exec();
+};
+
 function onBotRemovedFromChat(msg) {
     if (msg.left_chat_participant && msg.left_chat_participant.id == _bot.me.id) {
         removeChatPlayInterval(msg.chat.id);
@@ -254,7 +259,7 @@ function getAndSaveChatAdmins(msg) {
                 chatId: msg.chat.id,
                 chatTitle: msg.chat.title
             });
-            return Chat.update({ adminId: info.adminId, chatId: info.chatId }, info, { upsert: true });
+            return Chat.update({ adminId: info.adminId, chatId: info.chatId }, info, { upsert: true }).exec();
         }));
     });
 };
