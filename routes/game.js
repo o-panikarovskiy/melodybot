@@ -106,7 +106,7 @@ function endGame(song) {
     clearTimeout(song.timerId);
     //clearInterval(song.intervalId);
 
-    let text = `Верный ответ:\n<b>${song.answers[song.right_answer]}</b>\n`;
+    let text = `Правильный ответ:\n<b>${song.answers[song.right_answer]}</b>\n`;
     if (song.isGroupPlay) {
         let winers = song.playerAnswers
             .filter(a => a.isCorrect)
@@ -117,7 +117,7 @@ function endGame(song) {
         text += (winers.length ? 'Победители:\n' + winers.join('\n') : 'Победителей нет.');
     } else {
         let answer = song.playerAnswers[0];
-        text += answer && answer.isCorrect ? `Ваш приз +${answer.score}💎.\nСыграем еще раз?\n/play` : 'К сожалению, Вы не угадали.\nПопробуйте еще раз\n/play.';
+        text += answer && answer.isCorrect ? `Ваш приз +${answer.score}💎.\nСыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
     };
 
     _bot.editMessageText(text, {
