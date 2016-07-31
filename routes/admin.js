@@ -57,6 +57,9 @@ function onGroupSelected(msg, id) {
 function onTimerChange(msg, groupId, prevVal) {
     let nextVal = '';
     switch (prevVal) {
+        case '2':
+            nextVal = '2';
+            break;
         case '5':
             nextVal = '10';
             break;
@@ -69,8 +72,11 @@ function onTimerChange(msg, groupId, prevVal) {
         case '30':
             nextVal = '60';
             break;
+        case '60':
+            nextVal = '120';
+            break;
         default:
-            nextVal = '5';
+            nextVal = '2';
             break;
     };
 

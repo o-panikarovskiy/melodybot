@@ -13,6 +13,7 @@ let _chatPlayIntervals = new Map();
 module.exports = function (bot) {
     _bot = bot;
     bot.onText(/^\/play$/, onPlay);
+    bot.onText(/^\/demo$/, onDemo);
     bot.on('callback_query', onAnswer);
     bot.on('left_chat_participant', onBotRemovedFromChat);
     bot.on('new_chat_participant', onBotAddToChat);
@@ -20,6 +21,12 @@ module.exports = function (bot) {
     bot.on('intervalChange', onChatPlayIntervalChange);
     setInterval(clearOldChatSongs, 35 * 1000);//clear not answered songs;
     initChatIntervals();
+};
+
+function onDemo(msg) {
+    return Song.findOne({ id: 'AwADAgAD1QIAAv2VKw8-9x1bYveb7QI' }).then(song => {
+        return sendSong(msg.chat.id, song);
+    });
 };
 
 function onPlay(msg) {
@@ -82,16 +89,7 @@ function onAnswer(msg) {
 function startGame(chatId) {
     if (_chatSongs.has(chatId)) return; //disable start when has active songs 
     return getRandomSong().then(song => {
-        return sendSong(chatId, song).then(res => {
-            song.start = Date.now();
-            song.chatId = chatId;
-            song.buttonsMessageId = res.message_id;
-            song.playerAnswers = [];
-            song.timerId = setTimeout(() => endGame(song), SESSION_TIMEOUT);
-
-            _chatSongs.set(chatId, song);
-            return res;
-        });
+        return sendSong(chatId, song);
     });
 };
 
@@ -155,6 +153,15 @@ function sendSong(chatId, song) {
                 inline_keyboard: formatAnswersInlineKeyboard(song)
             }
         });
+    }).then(res => {
+        song.start = Date.now();
+        song.chatId = chatId;
+        song.buttonsMessageId = res.message_id;
+        song.playerAnswers = [];
+        song.timerId = setTimeout(() => endGame(song), SESSION_TIMEOUT);
+
+        _chatSongs.set(chatId, song);
+        return res;
     });
 };
 
