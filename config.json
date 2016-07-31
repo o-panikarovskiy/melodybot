@@ -1,6 +1,9 @@
 {
     "app": {
-        "token": "254514685:AAH-VbOaCcXF2EkbGElqRvnv4E_g7gI8Z6k"
+        "token": "254514685:AAH-VbOaCcXF2EkbGElqRvnv4E_g7gI8Z6k",
+        "env": "develop",
+        "ip": "217.66.158.11",
+        "port": 8443
     },
     "game": {
         "sessionTimeout": 30
