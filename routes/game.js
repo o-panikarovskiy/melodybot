@@ -1,4 +1,5 @@
 'use strict';
+const Utils = require('../utils');
 const Chat = require('../models/chat');
 const Song = require('../models/song');
 const Player = require('../models/player');
@@ -99,21 +100,22 @@ function endGame(song) {
     clearTimeout(song.timerId);
     //clearInterval(song.intervalId);
 
-    let text = `Игра окончена!\nПравильный ответ: ${song.answers[song.right_answer]}\n`;
+    let text = `Верный ответ:\n<b>${song.answers[song.right_answer]}</b>\n`;
     if (song.isGroupPlay) {
         let winers = song.playerAnswers
             .filter(a => a.isCorrect)
             .slice(0, 10)
             .sort((a, b) => b.score - a.score)
-            .map((a, i) => (i + 1) + '. ' + a.player.first_name + (a.player.last_name ? ' ' + a.player.last_name : '') + ': +' + a.score);
+            .map((a, i) => Utils.formatWinnerRow(a.player, i, '+' + a.score))
 
         text += (winers.length ? 'Победители:\n' + winers.join('\n') : 'Победителей нет.');
     } else {
         let answer = song.playerAnswers[0];
-        text += answer && answer.isCorrect ? `Вы угадали! +${answer.score}. Сыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
+        text += answer && answer.isCorrect ? `Ваш приз +${answer.score}💎.\nСыграем еще раз?\n/play` : 'К сожалению, Вы не угадали.\nПопробуйте еще раз\n/play.';
     };
 
     _bot.editMessageText(text, {
+        parse_mode: 'HTML',
         message_id: song.buttonsMessageId,
         chat_id: song.chatId,
         reply_markup: ''
@@ -148,8 +150,9 @@ function getRandomSong() {
 
 function sendSong(chatId, song) {
     return _bot.sendVoice(chatId, song.id).then(res => {
-        let text = `Выберите правильный ответ. У вас есть ${SESSION_TIMEOUT / 1000} сек.`;
+        let text = `Выберите правильный ответ.\nУ вас есть <b>${SESSION_TIMEOUT / 1000}</b> сек.`;
         return _bot.sendMessage(chatId, text, {
+            parse_mode: 'HTML',
             disable_notification: true,
             reply_markup: {
                 inline_keyboard: formatAnswersInlineKeyboard(song)
