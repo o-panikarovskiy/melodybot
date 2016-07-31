@@ -93,7 +93,7 @@ function editGroupConfigMessage(msg, groupId, timerCount) {
         chat_id: msg.message.chat.id,
         reply_markup: {
             inline_keyboard: [
-                [{ text: 'Таймер:', callback_data: '_empty' }, { text: timerCount + '', callback_data: 'timer:' + groupId + ':' + timerCount }]
+                [{ text: 'Таймер (минуты):', callback_data: '_empty' }, { text: timerCount + '', callback_data: 'timer:' + groupId + ':' + timerCount }]
             ]
         }
     });
