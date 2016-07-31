@@ -25,7 +25,7 @@ module.exports = function (bot) {
 };
 
 function onPlay(msg) {
-    if (msg.chat.id != msg.from.id) return;//disable play command in group mode
+    if (msg.chat.id != msg.from.id) return _bot.sendMessage(msg.chat.id, 'Игра по по запросу только в привате @' + _bot.me.username);
     startGame(msg.chat.id, false);
 };
 
