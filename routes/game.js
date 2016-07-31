@@ -38,6 +38,8 @@ function onPlay(msg) {
 };
 
 function onAnswer(msg) {
+    if (msg.data === 'play_again') return startGame(msg.message.chat.id, false);
+
     let song = _chatSongs.get(msg.message.chat.id);
     if (!song || song.buttonsMessageId != msg.message.message_id) return;
     if (song.playerAnswers.find(a => a.player.id == msg.from.id)) {
@@ -78,19 +80,19 @@ function onAnswer(msg) {
 
         p.score += playerAnswer.score;
 
-        if (p.score >= 15 && !p.hasBronzeBage) {
+        if (p.score >= 15 && !p.hasBronzeBage && !song.isGroupPlay) {
             p.hasBronzeBage = true;
-            sendBronzeBage(player.chatId);
+            playerAnswer.hasBronzeBage = true;
         };
 
         return p.save();
+    }).then(p => {
+        if (song.isGroupPlay) {
+            return _bot.answerCallbackQuery(msg.id, `ДА! +${playerAnswer.score}! Ждем остальных...`);
+        } else {
+            return endGame(song);
+        };
     });
-
-    if (song.isGroupPlay) {
-        return _bot.answerCallbackQuery(msg.id, `ДА! +${playerAnswer.score}! Ждем остальных...`);
-    } else {
-        return endGame(song);
-    };
 };
 
 function startGame(chatId, isGroupPlay) {
@@ -117,7 +119,7 @@ function endGame(song) {
         text += (winers.length ? 'Победители:\n' + winers.join('\n') : 'Победителей нет.');
     } else {
         let answer = song.playerAnswers[0];
-        text += answer && answer.isCorrect ? `Ваш приз +${answer.score}💎.\nСыграем еще раз?\n/play` : 'К сожалению, Вы не угадали. Попробуйте еще раз\n/play.';
+        text += answer && answer.isCorrect ? `Ваш приз +${answer.score}💎.\nСыграем еще?\n/play` : 'Попробуйте еще\n/play.';
     };
 
     _bot.editMessageText(text, {
@@ -128,9 +130,14 @@ function endGame(song) {
     }).then(res => {
         return sendSongPoster(song.chatId, song);
     }).then(res => {
-        let hasAnswer = !!song.playerAnswers[0];
-        if (hasAnswer) {
-            if (!song.isGroupPlay) return startGame(song.chatId, false);
+        let answer = song.playerAnswers[0];
+        let hasAnswer = !!answer;
+        if (hasAnswer && !song.isGroupPlay) {
+            if (answer.hasBronzeBage) {
+                return sendBronzeBage(song.chatId);
+            } else {
+                return startGame(song.chatId, false);
+            }
         };
     });
 
@@ -184,7 +191,7 @@ function sendSong(chatId, song) {
 
 function sendSongPoster(chatId, song) {
     if (!song.poster_id) return Promise.reject();
-    return _bot.sendPhoto(chatId, song.poster_id);
+    return _bot.sendPhoto(chatId, song.poster_id, { caption: song.performer });
 };
 
 function formatAnswersInlineKeyboard(song) {
@@ -226,9 +233,15 @@ function sendBronzeBage(chatId) {
                 [
                     {
                         text: 'Рассказать друзьям',
-                        switch_inline_query: `Я получил награду Бронзовый меломан. Попробуй и ты!`
+                        switch_inline_query: 'Я получил награду Бронзовый меломан. Попробуй и ты!'
                     }
-                ]
+                ],
+                [
+                    {
+                        text: 'Играть еще',
+                        callback_data: 'play_again'
+                    }
+                ],
             ]
         })
     });
